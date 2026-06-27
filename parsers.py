@@ -37,6 +37,21 @@ def parse_pdf(file_bytes: bytes) -> List[ParsedBlock]:
         r')',
         re.IGNORECASE
     )
+    
+    # Table rows — 2+ currency figures on one line (financial statements)
+    TABLE_LINE_PATTERN = re.compile(r'(\$\s?[\d,]+(\.\d+)?\s*){2,}')
+
+    # Common lowercase connector words allowed inside an otherwise-titlecase heading
+    # (e.g. "Segment Information and Geographic Data" failed before, since
+    # line.istitle() requires every word capitalized)
+    HEADING_CONNECTORS = {"and", "of", "the", "in", "to", "for", "on", "with", "a", "an"}
+
+    def is_titlecase_heading(line):
+        words = line.split()
+        return all(
+            w[0].isupper() or w.lower() in HEADING_CONNECTORS
+            for w in words if w
+        )
 
     for i, page in enumerate(reader.pages):
         text = page.extract_text() or ""
@@ -67,10 +82,25 @@ def parse_pdf(file_bytes: bytes) -> List[ParsedBlock]:
             if SKIP_PATTERNS.match(line):
                 flush_paragraph(i + 1, current_section)
                 continue
+            
+            # Table rows — preserved as TABLE blocks, with any pending short label
+            # (e.g. "Rest of Asia Pacific") attached directly instead of being lost
+            # in flush_paragraph()'s 10-word minimum.
+            if TABLE_LINE_PATTERN.search(line):
+                label = ' '.join(current_para_lines).strip().rstrip(':').strip()
+                current_para_lines.clear()
+                table_text = f"{label}: {line}" if label else line
+                blocks.append(ParsedBlock(
+                    text=table_text,
+                    block_type=BlockType.TABLE,
+                    page=i + 1,
+                    section=current_section,
+                ))
+                continue
 
             # Heading detection — short, title/uppercase, no digits, no punctuation
             if word_count <= 6:
-                is_titlecase = line.istitle()
+                is_titlecase = is_titlecase_heading(line)
                 is_uppercase = line.isupper()
                 has_no_digits = not any(c.isdigit() for c in line)
                 has_no_punctuation = not any(c in line for c in '.,;:()')
@@ -85,8 +115,11 @@ def parse_pdf(file_bytes: bytes) -> List[ParsedBlock]:
                         section=current_section,
                     ))
                 else:
-                    # Short line that isn't a heading — treat as paragraph boundary
-                    flush_paragraph(i + 1, current_section)
+                    # Short line that isn't a heading — preserve as paragraph content.
+                    # (FIX: was calling flush_paragraph() here, which silently discarded
+                    # this line — e.g. "Rest of Asia Pacific" vanishing before a revenue
+                    # figure, causing it to be misread as a consolidated total.)
+                    current_para_lines.append(line)
                 continue
 
             # Paragraph content — flush when sentence ends
