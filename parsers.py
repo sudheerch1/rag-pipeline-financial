@@ -86,10 +86,17 @@ def parse_pdf(file_bytes: bytes) -> List[ParsedBlock]:
             # Table rows — preserved as TABLE blocks, with any pending short label
             # (e.g. "Rest of Asia Pacific") attached directly instead of being lost
             # in flush_paragraph()'s 10-word minimum.
+            
             if TABLE_LINE_PATTERN.search(line):
-                label = ' '.join(current_para_lines).strip().rstrip(':').strip()
-                current_para_lines.clear()
+                # Only use the single immediately-preceding line as the row label
+                # (e.g. "Americas:") — pop it out, then flush anything older as prose
+                # so unrelated intro text doesn't get glued onto the first data row.
+                label = ""
+                if current_para_lines:
+                    label = current_para_lines.pop().strip().rstrip(':').strip()
+                    flush_paragraph(i + 1, current_section)
                 table_text = f"{label}: {line}" if label else line
+
                 blocks.append(ParsedBlock(
                     text=table_text,
                     block_type=BlockType.TABLE,

@@ -97,8 +97,12 @@ def _make_chunk(
 ) -> Optional[Chunk]:
     text = text.strip()
     tokens = count_tokens(text)
-    if tokens < MIN_TOKENS:
-        return None
+    # Table rows are exempt from the prose minimum — a short row like
+    # "Operating income $67,656 $60,508 $62,683" is a complete, meaningful
+    # retrieval unit even under MIN_TOKENS, unlike a truncated prose fragment.
+    if tokens < MIN_TOKENS and block.block_type != BlockType.TABLE:
+        return None    
+
     return Chunk(
         text        = text,
         chunk_index = index,
@@ -382,7 +386,8 @@ def chunk_table_aware(
 # Maps parser_key → best chunking strategy
 # semantic = uses Bedrock embeddings to detect topic boundaries
 STRATEGY_MAP = {
-    "pdf":      "semantic",     # ← upgraded from table_aware to semantic
+    "pdf":      "table_aware",     # financial PDFs: table rows must stay atomic,
+                                 # not split/merged by semantic similarity grouping
     "docx":     "semantic",     # ← upgraded from table_aware to semantic
     "xlsx":     "table_aware",  # tables stay table_aware
     "csv":      "table_aware",
