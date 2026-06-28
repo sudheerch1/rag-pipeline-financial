@@ -197,7 +197,7 @@ def node_store(state: IngestionState) -> IngestionState:
     # Delete stale chunks
     try:
         response = client.delete_by_query(
-            index='rag-chunks',
+            index='rag-chunks-financial',
             body={"query": {"term": {"source_key": object_key}}}
         )
         deleted = response.get('deleted', 0)
@@ -210,7 +210,7 @@ def node_store(state: IngestionState) -> IngestionState:
 
     # Index new chunks
     for item in state['embeddings']:
-        client.index(index='rag-chunks', body={
+        client.index(index='rag-chunks-financial', body={
             'text':          item['text'],
             'embedding':     item['embedding'],
             'source_key':    item['source_key'],
