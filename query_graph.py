@@ -28,7 +28,7 @@ bedrock_client = boto3.client('bedrock-runtime',
 # ── Step 1: HyDE ──────────────────────────────────────────────────────────────
 
 hyde_prompt = PromptTemplate.from_template("""Write a short factual passage that would directly answer this question.
-Write as if it's extracted from a legal document. 2-3 sentences only.
+Write as if it's extracted from a company's SEC 10-K filing. 2-3 sentences only.
 
 Question: {question}
 
@@ -81,7 +81,7 @@ def run_search(state: dict) -> dict:
 
     client = get_opensearch_client()
     response = client.search(
-        index='rag-chunks',
+        index='rag-chunks-financial',
         body=query,
         params={"search_pipeline": "hybrid-search-pipeline"}
     )
