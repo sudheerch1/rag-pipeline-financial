@@ -158,6 +158,12 @@ answer_prompt = PromptTemplate.from_template("""You are a helpful assistant. Ans
 
 When the context contains financial figures, identify the EXACT line item label (e.g. "Total net sales", "Net sales by segment", "Products", "Services") and the EXACT reporting period (e.g. fiscal year, quarter) associated with each number before using it. If a chunk contains multiple similar figures and it is not clear which one matches the question, say so explicitly rather than guessing.
 
+When comparing a figure across two periods (e.g. "did revenue increase or decrease"), you MUST follow this exact procedure before writing your answer:
+1. State the earlier period's figure.
+2. State the later period's figure.
+3. Compute and state the numeric difference (later minus earlier).
+4. Only after stating the difference, choose "increased" if the difference is positive or "declined"/"decreased" if the difference is negative. Never state "increased" or "declined" without first showing the two numbers and the difference that justifies it.
+
 If the answer is not in the context, say "I cannot find this information in the provided documents."
 
 Context:
