@@ -52,6 +52,7 @@ def run_hyde(state: dict) -> dict:
 def run_search(state: dict) -> dict:
     question_vector = embed_query(state["hyde_text"])
     question = state["question"]
+    company = state.get("company", "")
     top_k = 15  # A1: increased from 10 — larger candidate pool for reranker
 
     query = {
@@ -78,6 +79,12 @@ def run_search(state: dict) -> dict:
         },
         "_source": ["text", "source_key", "page", "chunk_index", "hyq_questions", "section"]
     }
+    if company:
+        query["post_filter"] = {
+            "wildcard": {
+                "source_key": f"*{company}*"
+            }
+        }
 
     client = get_opensearch_client()
     response = client.search(
@@ -292,6 +299,7 @@ def lambda_handler(event, context):
         }
 
     question = question.strip()
+    company = body.get('company', '').strip().lower()
 
     if len(question) == 0:
         logger.warning("validation failed", extra={"reason": "blank question after strip"})
@@ -318,7 +326,7 @@ def lambda_handler(event, context):
         }
     logger.info("query received", extra={"question_preview": question[:80]})
 
-    state = query_pipeline.invoke({"question": question})
+    state = query_pipeline.invoke({"question": question, "company": company})
 
     return {
         'statusCode': 200,
