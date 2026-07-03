@@ -15,3 +15,5 @@ package/
 response.json
 requirements-lambda.txt
 query_lambda.zip
+
+package/

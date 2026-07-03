@@ -79,10 +79,18 @@ def run_search(state: dict) -> dict:
         },
         "_source": ["text", "source_key", "page", "chunk_index", "hyq_questions", "section"]
     }
+    
+    COMPANY_TICKER_MAP = {
+        "apple": "aapl",
+        "microsoft": "msft",
+        "amazon": "amzn",
+    }
+
     if company:
+        ticker = COMPANY_TICKER_MAP.get(company.strip().lower(), company.lower())
         query["post_filter"] = {
             "wildcard": {
-                "source_key": f"*{company}*"
+                "source_key": f"*{ticker}*"
             }
         }
 
