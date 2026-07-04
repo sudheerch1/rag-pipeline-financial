@@ -32,7 +32,7 @@ def get_opensearch_client():
 def list_files(client):
     """Show all unique source files in the index."""
     resp = client.search(
-        index="rag-chunks",
+        index="rag-chunks-financial",
         body={
             "size": 0,
             "aggs": {

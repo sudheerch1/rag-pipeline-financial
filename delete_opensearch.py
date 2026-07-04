@@ -3,7 +3,7 @@ import boto3
 
 def reset_all_dynamodb():
     session = boto3.Session(profile_name='rag-dev')
-    table = session.resource('dynamodb').Table('rag-metadata')
+    table = session.resource('dynamodb').Table('rag-metadata-financial')
     response = table.scan(ProjectionExpression='document_id')
     items = response.get('Items', [])
     for item in items:

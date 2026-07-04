@@ -26,7 +26,7 @@ bedrock_client = boto3.client('bedrock-runtime',
     region_name=os.environ.get('AWS_REGION', 'us-east-1'))
 dynamodb = boto3.resource('dynamodb', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
 
-METADATA_TABLE   = os.environ.get('METADATA_TABLE', 'rag-metadata')
+METADATA_TABLE   = os.environ.get('METADATA_TABLE', 'rag-metadata-financial')
 PROCESSED_BUCKET = os.environ.get('PROCESSED_BUCKET', 'rag-processed-911414006786')
 HASH_INDEX_NAME  = 'content-hash-index'
 

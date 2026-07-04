@@ -11,7 +11,7 @@ print(f"Connecting to: {endpoint}")
 
 # Delete index
 response = requests.delete(
-    f"{endpoint}/rag-chunks",
+    f"{endpoint}/rag-chunks-financial",
     auth=auth
 )
 

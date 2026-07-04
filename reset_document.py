@@ -25,7 +25,7 @@ import sys
 import boto3
 
 PROFILE_NAME   = 'rag-dev'
-METADATA_TABLE = 'rag-metadata'
+METADATA_TABLE = 'rag-metadata-financial'
 
 
 def get_table():
