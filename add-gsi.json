@@ -1,0 +1,24 @@
+{
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "content_hash",
+      "AttributeType": "S"
+    }
+  ],
+  "GlobalSecondaryIndexUpdates": [
+    {
+      "Create": {
+        "IndexName": "content-hash-index",
+        "KeySchema": [
+          {
+            "AttributeName": "content_hash",
+            "KeyType": "HASH"
+          }
+        ],
+        "Projection": {
+          "ProjectionType": "ALL"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "Records": [
+    {
+      "eventSource": "aws:sqs",
+      "body": "{\"Records\":[{\"eventSource\":\"aws:s3\",\"s3\":{\"bucket\":{\"name\":\"rag-raw-financial-911414006786\"},\"object\":{\"key\":\"apple-10k-fy2024.html\"}}}]}"
+    }
+  ]
+}

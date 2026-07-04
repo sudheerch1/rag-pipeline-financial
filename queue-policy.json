@@ -1,0 +1,3 @@
+{
+  "Policy": "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":\"s3.amazonaws.com\"},\"Action\":\"SQS:SendMessage\",\"Resource\":\"arn:aws:sqs:us-east-1:911414006786:rag-ingestion-financial-queue\",\"Condition\":{\"ArnLike\":{\"aws:SourceArn\":\"arn:aws:s3:::rag-raw-financial-911414006786\"}}}]}"
+}

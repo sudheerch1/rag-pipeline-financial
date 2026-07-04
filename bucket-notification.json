@@ -1,0 +1,9 @@
+{
+  "QueueConfigurations": [
+    {
+      "Id": "rag-upload-trigger-financial",
+      "QueueArn": "arn:aws:sqs:us-east-1:911414006786:rag-ingestion-financial-queue",
+      "Events": ["s3:ObjectCreated:*"]
+    }
+  ]
+}
