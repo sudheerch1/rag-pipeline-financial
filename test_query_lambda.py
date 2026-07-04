@@ -12,8 +12,8 @@ import boto3
 import json
 
 PROFILE_NAME   = 'rag-dev'
-FUNCTION_NAME  = 'rag-query'
-TEST_QUESTION  = 'Why did the court reject the incompetency claim?'
+FUNCTION_NAME  = 'rag-query-financial'
+TEST_QUESTION  = 'What was Apple total net sales for fiscal year 2023?'
 
 session  = boto3.Session(profile_name=PROFILE_NAME)
 client   = session.client('lambda', region_name='us-east-1')
