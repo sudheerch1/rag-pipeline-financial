@@ -20,7 +20,7 @@ client   = session.client('lambda', region_name='us-east-1')
 
 payload = {
     "httpMethod": "POST",
-    "body": json.dumps({"question": TEST_QUESTION}),
+    "body": json.dumps({"question": TEST_QUESTION, "company": "apple"}),
     "headers": {"x-api-key": "gPEWpbTVLq9NPD0YJYD4pCszNr7UcF4ln1etxZd0"}
 }
 
