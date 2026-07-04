@@ -419,6 +419,15 @@ def detect(file_bytes: bytes, filename: str = '') -> FileTypeResult:
             return FileTypeResult(mime, name, 'msoffice_legacy', 'magic', ext or None)
 
         # ── All other formats: direct match ──────────────────────────────
+        if key == 'xml':
+            probe = file_bytes[:2048].lower()
+            if b'<html' in probe:
+                return FileTypeResult(
+                    'text/html', 'HTML document (XHTML w/ XML prolog)', 'html',
+                    'magic', ext or None
+                )
+            return FileTypeResult(mime, name, key, 'magic', ext or None)
+
         return FileTypeResult(mime, name, key, 'magic', ext or None)
 
     # ── Step 2: Text heuristic ───────────────────────────────────────────────
