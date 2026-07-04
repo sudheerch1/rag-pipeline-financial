@@ -42,7 +42,7 @@ index_body = {
 }
 
 # Create index
-url = f"{endpoint}/rag-chunks"
+url = f"{endpoint}/rag-chunks-financial"
 response = requests.put(
     url,
     auth=auth,
