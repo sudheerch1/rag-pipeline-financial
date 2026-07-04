@@ -111,6 +111,7 @@ def run_search(state: dict) -> dict:
             'text': h['_source']['text'],
             'source': h['_source']['source_key'],
             'page': h['_source'].get('page'),
+            'chunk_index': h['_source'].get('chunk_index'),
             'section': h['_source'].get('section', ''),
             'score': h['_score']
         }
@@ -161,7 +162,7 @@ def run_rerank(state: dict) -> dict:
 def run_dedup(state: dict) -> dict:
     seen, unique = set(), []
     for c in state["chunks"]:
-        key = f"{c['source_key']}_{c['chunk_index']}"
+        key = f"{c['source']}_{c['chunk_index']}"
         if key not in seen:
             seen.add(key)
             unique.append(c)
