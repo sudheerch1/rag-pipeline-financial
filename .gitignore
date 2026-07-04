@@ -17,3 +17,8 @@ requirements-lambda.txt
 query_lambda.zip
 
 package/
+*.json
+!package.json
+*.txt
+deployed_check*/
+lambda-build/
