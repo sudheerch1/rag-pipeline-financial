@@ -183,13 +183,14 @@ When comparing a figure across two periods (e.g. "did revenue increase or decrea
 3. Compute and state the numeric difference (later minus earlier).
 4. Only after stating the difference, choose "increased" if the difference is positive or "declined"/"decreased" if the difference is negative. Never state "increased" or "declined" without first showing the two numbers and the difference that justifies it.
 
-If the answer is not in the context, say "I cannot find this information in the provided documents."
-
 Context:
 {context}
 
 Question: {question}
 
+If the exact requested time period or granularity is not in the context (e.g. the question asks for a specific quarter but the context only contains annual/fiscal-year figures), do NOT refuse. Instead, state the closest available figure explicitly, and clearly note the granularity mismatch (e.g. "This filing reports annual figures, not quarterly. The most recent fiscal year total was...").
+
+Only say "I cannot find this information in the provided documents." if no related figure exists in the context at all, regardless of period or granularity. Do not say this and then also provide a fallback figure in the same answer — if you have a fallback figure to offer, lead directly with that figure and the granularity caveat, and omit the refusal sentence entirely.
 Answer:""")
 
 answer_chain = answer_prompt | get_llm() | StrOutputParser()
