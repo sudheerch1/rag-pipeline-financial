@@ -21,6 +21,7 @@ def parse_pdf(file_bytes: bytes) -> List[ParsedBlock]:
     blocks = []
     reader = pypdf.PdfReader(io.BytesIO(file_bytes))
     current_section = ""
+    current_fiscal_header = ""  # NEW — tracks most recent "Years Ended ..." line
 
     # Generic PDF noise — applies to any document, not file-specific
     SKIP_PATTERNS = re.compile(
@@ -37,9 +38,24 @@ def parse_pdf(file_bytes: bytes) -> List[ParsedBlock]:
         r')',
         re.IGNORECASE
     )
-    
+
     # Table rows — 2+ currency figures on one line (financial statements)
     TABLE_LINE_PATTERN = re.compile(r'(\$\s?[\d,]+(\.\d+)?\s*){2,}')
+
+    # NEW — detects fiscal-year header lines that precede financial tables, e.g.:
+    #   "Years Ended September 28, 2024 September 30, 2023 September 24, 2022"
+    #   "Twelve Months Ended December 31, 2024 2023 2022"
+    #   "Fiscal Year Ended 2024 2023 2022"
+    # Two-part check kept deliberately loose (wording varies by filer/year):
+    #   1. FISCAL_YEAR_CONTEXT_HINT — a phrase strongly associated with period headers
+    #   2. FISCAL_YEAR_HEADER_PATTERN — at least two 19xx/20xx years on the same line
+    FISCAL_YEAR_CONTEXT_HINT = re.compile(
+        r'(Years?\s+Ended|Fiscal\s+Year|Twelve\s+Months\s+Ended|Quarter\s+Ended)',
+        re.IGNORECASE
+    )
+    FISCAL_YEAR_HEADER_PATTERN = re.compile(
+        r'((19|20)\d{2}).*((19|20)\d{2})'
+    )
 
     # Common lowercase connector words allowed inside an otherwise-titlecase heading
     # (e.g. "Segment Information and Geographic Data" failed before, since
@@ -82,11 +98,30 @@ def parse_pdf(file_bytes: bytes) -> List[ParsedBlock]:
             if SKIP_PATTERNS.match(line):
                 flush_paragraph(i + 1, current_section)
                 continue
-            
+
+            # NEW — detect and capture fiscal-year header lines BEFORE the
+            # table-row check. These lines often carry no $ signs (just years
+            # or dates) and would otherwise fall through to prose handling —
+            # either getting glued into an unrelated paragraph or discarded,
+            # which is exactly why table chunks downstream had no fiscal-year
+            # labels attached to them.
+            if (FISCAL_YEAR_CONTEXT_HINT.search(line) and
+                    FISCAL_YEAR_HEADER_PATTERN.search(line)):
+                current_fiscal_header = line
+                flush_paragraph(i + 1, current_section)
+                blocks.append(ParsedBlock(
+                    text=line,
+                    block_type=BlockType.HEADING,
+                    page=i + 1,
+                    section=current_section,
+                ))
+                continue
+
             # Table rows — preserved as TABLE blocks, with any pending short label
             # (e.g. "Rest of Asia Pacific") attached directly instead of being lost
-            # in flush_paragraph()'s 10-word minimum.
-            
+            # in flush_paragraph()'s 10-word minimum. Now also prefixed with the
+            # most recent fiscal-year header so the chunk itself carries which
+            # years each figure belongs to (critical for retrieval + HyQ quality).
             if TABLE_LINE_PATTERN.search(line):
                 # Only use the single immediately-preceding line as the row label
                 # (e.g. "Americas:") — pop it out, then flush anything older as prose
@@ -95,7 +130,10 @@ def parse_pdf(file_bytes: bytes) -> List[ParsedBlock]:
                 if current_para_lines:
                     label = current_para_lines.pop().strip().rstrip(':').strip()
                     flush_paragraph(i + 1, current_section)
-                table_text = f"{label}: {line}" if label else line
+
+                # NEW — prepend fiscal year header context, if we have one
+                prefix = f"{current_fiscal_header} — " if current_fiscal_header else ""
+                table_text = f"{prefix}{label}: {line}" if label else f"{prefix}{line}"
 
                 blocks.append(ParsedBlock(
                     text=table_text,
@@ -115,6 +153,7 @@ def parse_pdf(file_bytes: bytes) -> List[ParsedBlock]:
                 if (is_titlecase or is_uppercase) and has_no_digits and has_no_punctuation:
                     flush_paragraph(i + 1, current_section)
                     current_section = line
+                    current_fiscal_header = ""  # NEW — clear stale header on section change
                     blocks.append(ParsedBlock(
                         text=line,
                         block_type=BlockType.HEADING,
