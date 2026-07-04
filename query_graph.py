@@ -89,8 +89,11 @@ def run_search(state: dict) -> dict:
     if company:
         ticker = COMPANY_TICKER_MAP.get(company.strip().lower(), company.lower())
         query["post_filter"] = {
-            "wildcard": {
-                "source_key": f"*{ticker}*"
+            "bool": {
+                "should": [
+                    {"wildcard": {"source_key": f"*{ticker}*"}},
+                    {"wildcard": {"source_key": f"*{company.strip().lower()}*"}}
+                ]
             }
         }
 
@@ -121,7 +124,7 @@ def run_search(state: dict) -> dict:
 def run_rerank(state: dict) -> dict:
     chunks = state["chunks"]
     question = state["question"]
-    top_n = 5  # A2: increased from 5 — pass more chunks to answer generation
+    top_n = 8  # A2: increased from 5 — pass more chunks to answer generation
 
     if not chunks:
         return state
@@ -158,7 +161,7 @@ def run_rerank(state: dict) -> dict:
 def run_dedup(state: dict) -> dict:
     seen, unique = set(), []
     for c in state["chunks"]:
-        key = f"{c['source']}_{c['page']}"
+        key = f"{c['source_key']}_{c['chunk_index']}"
         if key not in seen:
             seen.add(key)
             unique.append(c)
