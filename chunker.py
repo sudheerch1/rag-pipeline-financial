@@ -13,6 +13,10 @@ Three strategies, selectable per document type:
 
   3. table_aware — Keeps table blocks intact (never splits mid-table).
                    Applies recursive to text blocks. Best for mixed docs.
+                   When a table block IS too large and must be split into
+                   row-batches, the header row is carried forward into every
+                   batch (not just the first) so downstream chunks retain
+                   column/period context (e.g. fiscal year headers).
 
 All strategies respect:
   - MAX_TOKENS hard ceiling (no chunk ever exceeds this)
@@ -250,19 +254,11 @@ def chunk_semantic(
     """
     Semantic chunking using Cohere Embed v4.
 
-    How it works:
-      1. Embed each block using Bedrock Titan (same model as ingestion)
-      2. Compute cosine similarity between adjacent blocks
-      3. Split when similarity drops below threshold (topic change detected)
-      4. Apply recursive splitting if any group exceeds max_tokens
-
-    Advantages over fixed-size chunking:
-      → Keeps related sentences together
-      → Splits at natural topic boundaries
-      → Better context preservation
-      → More relevant chunks retrieved
-
     Falls back to recursive chunking if Bedrock is unavailable.
+
+    NOTE: Not used for table-heavy formats (see STRATEGY_MAP) — similarity-based
+    grouping has no concept of table structure and will fragment financial
+    tables unpredictably. Use table_aware for anything with dense tabular data.
     """
     if not blocks:
         return []
@@ -293,7 +289,6 @@ def chunk_semantic(
             over_budget = count_tokens(group_text) > max_tokens
             section_break = blocks[i].section != blocks[i - 1].section
 
-            # Split if: low similarity (topic change) OR too large OR section break
             if sim < similarity_threshold or over_budget or section_break:
                 text = "\n\n".join(b.text for b in group_blocks)
                 pieces = _split_text_recursive(text, max_tokens, SEPARATORS)
@@ -308,7 +303,6 @@ def chunk_semantic(
             else:
                 group_blocks.append(blocks[i])
 
-        # Flush final group
         text = "\n\n".join(b.text for b in group_blocks)
         pieces = _split_text_recursive(text, max_tokens, SEPARATORS)
         pieces = _add_overlap(pieces, overlap_tokens)
@@ -352,25 +346,45 @@ def chunk_table_aware(
                 result_indexed.append((orig_i, c))
                 chunk_index += 1
         else:
+            # FIX: table is too large for one chunk and must be split into
+            # row-batches. Previously, only the FIRST batch retained the
+            # header row (rows[0]) — every subsequent batch lost the column
+            # headers (e.g. fiscal year labels), leaving numeric rows with
+            # no period/label context. Now the header row is carried forward
+            # into every batch, not just the first.
+            #
+            # Assumption: rows[0] is a genuine header row. True for
+            # parse_html's <table> extraction (first <tr>, incl. <th> cells)
+            # and typical parse_xlsx/parse_csv layouts. If a table block has
+            # no real header row, this just repeats its first row as a
+            # (harmless) prefix — not incorrect, just slightly redundant.
             rows = block.text.split("\n")
-            batch: List[str] = []
-            for row in rows:
-                candidate = "\n".join(batch + [row])
-                if count_tokens(candidate) > max_tokens and batch:
-                    text = "\n".join(batch)
-                    c = _make_chunk(text, chunk_index, block, orig_i, orig_i)
-                    if c:
-                        result_indexed.append((orig_i, c))
-                        chunk_index += 1
-                    batch = [row]
-                else:
-                    batch.append(row)
-            if batch:
-                text = "\n".join(batch)
+            header_row = rows[0] if rows else ""
+            data_rows = rows[1:] if header_row else rows
+
+            batch: List[str] = [header_row] if header_row else []
+
+            def _flush_batch(batch_rows: List[str]):
+                nonlocal chunk_index
+                if not batch_rows:
+                    return
+                if header_row and len(batch_rows) <= 1:
+                    return
+                text = "\n".join(batch_rows)
                 c = _make_chunk(text, chunk_index, block, orig_i, orig_i)
                 if c:
                     result_indexed.append((orig_i, c))
                     chunk_index += 1
+
+            for row in data_rows:
+                candidate = "\n".join(batch + [row])
+                if count_tokens(candidate) > max_tokens and len(batch) > (1 if header_row else 0):
+                    _flush_batch(batch)
+                    batch = [header_row, row] if header_row else [row]
+                else:
+                    batch.append(row)
+
+            _flush_batch(batch)
 
     result_indexed.sort(key=lambda x: x[0])
     final = []
@@ -383,19 +397,20 @@ def chunk_table_aware(
 
 # ── Strategy selector ─────────────────────────────────────────────────────────
 
-# Maps parser_key → best chunking strategy
-# semantic = uses Bedrock embeddings to detect topic boundaries
 STRATEGY_MAP = {
-    "pdf":      "table_aware",     # financial PDFs: table rows must stay atomic,
-                                 # not split/merged by semantic similarity grouping
-    "docx":     "semantic",     # ← upgraded from table_aware to semantic
-    "xlsx":     "table_aware",  # tables stay table_aware
+    "pdf":      "table_aware",
+    "docx":     "semantic",
+    "xlsx":     "table_aware",
     "csv":      "table_aware",
     "pptx":     "recursive",
-    "html":     "semantic",     # ← upgraded to semantic
+    "html":     "table_aware",  # FIX: was "semantic" — chunk_semantic has no
+                                 # table awareness at all, and HTML is the
+                                 # primary ingestion format for financial 10-Ks
+                                 # in this project. Financial tables must stay
+                                 # table_aware, same as pdf/xlsx/csv.
     "json":     "recursive",
-    "text":     "semantic",     # ← upgraded to semantic
-    "markdown": "semantic",     # ← upgraded to semantic
+    "text":     "semantic",
+    "markdown": "semantic",
     "email":    "recursive",
 }
 
@@ -409,8 +424,6 @@ def chunk(
 ) -> List[Chunk]:
     """
     Main entry point. Picks a strategy automatically from fmt.
-    PDF, DOCX, HTML, text, markdown now use semantic chunking by default.
-    Falls back to recursive if Bedrock is unavailable.
     """
     if not blocks:
         return []
