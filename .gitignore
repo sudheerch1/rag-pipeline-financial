@@ -20,5 +20,5 @@ package/
 *.json
 !package.json
 *.txt
-deployed_check*/
+deployed[-_]check*/
 lambda-build/
