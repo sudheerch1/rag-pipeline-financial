@@ -72,6 +72,6 @@ if response.status_code == 200:
     print("   Pipeline name: hybrid-search-pipeline")
     print("   Vector weight: 0.5")
     print("   BM25 weight:   0.5")
-    print("\nNext step: update query_handler.py to use hybrid search")
+    print("\nHybrid search pipeline is now active.")
 else:
     print("\n❌ Failed to create pipeline. Check the error above.")
