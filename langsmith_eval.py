@@ -20,7 +20,7 @@ from langsmith.schemas import Run, Example
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-API_URL      = "https://k0injz47nk.execute-api.us-east-1.amazonaws.com/prod/query"
+API_URL      = "https://<API_ID>.execute-api.us-east-1.amazonaws.com/prod/query"
 API_KEY      = "gPEWpbTVLq9NPD0YJYD4pCszNr7UcF4ln1etxZd0"
 DATASET_NAME = "rag-pipeline-three-doc-eval-v1"
 PROJECT_NAME = "rag-pipeline"

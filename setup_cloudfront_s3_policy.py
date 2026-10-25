@@ -12,7 +12,7 @@ import boto3
 import json
 
 PROFILE_NAME = 'rag-dev'
-BUCKET_NAME  = 'rag-frontend-911414006786'
+BUCKET_NAME  = 'rag-frontend-<ACCOUNT_ID>'
 
 session   = boto3.Session(profile_name=PROFILE_NAME)
 s3_client = session.client('s3', region_name='us-east-1')
@@ -56,5 +56,5 @@ Setup complete!
 → CloudFront uses S3 website endpoint
 → HTTPS served by CloudFront
 
-Try opening: https://d2hsci73dlmw9w.cloudfront.net
+Try opening: https://<DISTRIBUTION_ID>.cloudfront.net
 """)

@@ -95,7 +95,7 @@ Security (left nav) → Roles → all_access → Mapped users tab → Backend ro
 
 Add this ARN:
 ```
-arn:aws:iam::911414006786:role/service-role/rag-document-processor-role-ucg8h778
+arn:aws:iam::<ACCOUNT_ID>:role/service-role/rag-document-processor-role-ucg8h778
 ```
 
 > ⚠️ This is the **IAM Role ARN**, NOT the Lambda function ARN. Both Lambdas share this role.
@@ -128,14 +128,14 @@ Upload **one at a time**. Wait for each ingestion to complete before uploading t
 
 ```powershell
 aws s3 cp "C:\Tech\PROD-Grade-POC\Dataset\johnson_v._superior_court_1.pdf" `
-  s3://rag-raw-911414006786/ --profile rag-dev
+  s3://rag-raw-<ACCOUNT_ID>/ --profile rag-dev
 
 # Watch logs in a separate terminal:
 aws logs tail /aws/lambda/rag-document-processor --follow --profile rag-dev
 # Wait for: "Status: completed" before uploading next file
 
 aws s3 cp "C:\Tech\PROD-Grade-POC\Dataset\raceway_ford_cases.pdf" `
-  s3://rag-raw-911414006786/ --profile rag-dev
+  s3://rag-raw-<ACCOUNT_ID>/ --profile rag-dev
 ```
 
 ---
@@ -162,12 +162,12 @@ Expected:
 ```powershell
 # Health check (should return "healthy" + "opensearch": "reachable")
 (Invoke-WebRequest `
-  -Uri "https://k0injz47nk.execute-api.us-east-1.amazonaws.com/prod/health" `
+  -Uri "https://<API_ID>.execute-api.us-east-1.amazonaws.com/prod/health" `
   -UseBasicParsing).Content
 
 # Query test
 Invoke-WebRequest `
-  -Uri "https://k0injz47nk.execute-api.us-east-1.amazonaws.com/prod/query" `
+  -Uri "https://<API_ID>.execute-api.us-east-1.amazonaws.com/prod/query" `
   -Method POST `
   -Headers @{
     "x-api-key"="gPEWpbTVLq9NPD0YJYD4pCszNr7UcF4ln1etxZd0"

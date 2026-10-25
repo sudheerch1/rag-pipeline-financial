@@ -18,7 +18,7 @@ are NOT triggered and Lambda is NOT invoked on backup writes.
 Usage (PowerShell):
   $env:OPENSEARCH_ENDPOINT = "search-rag-vectors-xxxx.us-east-1.es.amazonaws.com"
   $env:OPENSEARCH_PASSWORD = '<password — use SINGLE quotes, it contains a $>'
-  $env:AWS_ACCOUNT_ID = "911414006786"
+  $env:AWS_ACCOUNT_ID = "<ACCOUNT_ID>"
   python delete_opensearch.py
 
 Requirements:

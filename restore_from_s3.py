@@ -41,7 +41,7 @@ from opensearchpy.helpers import bulk
 OPENSEARCH_ENDPOINT = os.environ.get('OPENSEARCH_ENDPOINT', '')
 OPENSEARCH_USER     = os.environ.get('OPENSEARCH_USER', 'ragadmin')
 OPENSEARCH_PASSWORD = os.environ.get('OPENSEARCH_PASSWORD', '')
-AWS_ACCOUNT_ID      = os.environ.get('AWS_ACCOUNT_ID', '911414006786')
+AWS_ACCOUNT_ID      = os.environ.get('AWS_ACCOUNT_ID', '<ACCOUNT_ID>')
 BACKUP_BUCKET       = f'rag-opensearch-backup-{AWS_ACCOUNT_ID}'
 CACHE_PREFIX        = 'latest-financial'   # FIX: was 'latest'
 INDEX_NAME          = os.environ.get('TARGET_INDEX_NAME', 'rag-chunks-financial')

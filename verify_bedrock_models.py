@@ -124,7 +124,7 @@ def test_claude_haiku(client):
 
 def main():
     print("\nBedrock Model Access Verification")
-    print(f"Account : 911414006786")
+    print(f"Account : <ACCOUNT_ID>")
     print(f"Region  : {AWS_REGION}")
     print(f"Profile : {AWS_PROFILE}")
 

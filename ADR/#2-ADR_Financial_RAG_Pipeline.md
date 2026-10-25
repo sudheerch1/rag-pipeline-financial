@@ -3,7 +3,7 @@
 
 **Project:** Financial Research Agent POC — cross-company financial question answering grounded in SEC 10-K filings (Apple, Microsoft, Amazon)
 **Scope of this document:** the RAG (retrieval) layer only — ingestion, chunking, embedding, hybrid search, and query pipeline. The agent orchestration layer (`financial-research-agent`, LangGraph multi-node agent) consumes this pipeline as a tool and is out of scope here.
-**AWS account:** 911414006786, region `us-east-1`, profile `rag-dev`
+**AWS account:** <ACCOUNT_ID>, region `us-east-1`, profile `rag-dev`
 
 ---
 
@@ -34,7 +34,7 @@
 **Consequences:**
 - Positive: combines the recall benefits of semantic search with the precision benefits of lexical/HyQ matching, which is well suited to structured financial data where exact terminology matters.
 - Positive: the two-stage retrieve-then-rerank pattern lets a wide net (`top_k=15` candidates) be cast cheaply, with the more expensive rerank step applied only to the reduced candidate set.
-- Negative/risk (materialized and fixed in this session): rerank output must be trusted downstream without further filtering that could silently discard correctly-ranked chunks (see ADR-004).
+- Negative/risk (materialized and fixed): rerank output must be trusted downstream without further filtering that could silently discard correctly-ranked chunks (see ADR-004).
 - Cohere Embed v4 defaults to 1536 output dimensions when unspecified — this happens to match the existing index mapping, so no explicit dimension configuration was required, but this is an implicit dependency worth documenting rather than relying on coincidence long-term.
 
 ---
@@ -84,7 +84,7 @@ This defect was masked for Apple (whose "Total net sales" figure is redundantly 
 - Positive: cost-conscious for a POC with intermittent, demo-driven usage patterns — no idle compute cost between invocations, aligning with the project's cost-conscious AWS architecture preference.
 - Positive: clean separation of ingestion and query concerns as independently deployable, independently scalable units.
 - Negative/operational cost: Windows-built Lambda packages require forcing Linux-compatible `manylinux2014_x86_64` wheels via pip when Docker isn't available, adding a packaging step; packages exceeding the direct-upload size limit (~51.6 MB observed ceiling) must be staged via S3 rather than uploaded directly — both are now standing operational knowledge, not open risks.
-- Negative/operational risk (materialized this session): the staging discipline required to keep `package/` (the actual zip source) in sync with the edited source file is manual and has caused at least one deploy where the staged code was stale relative to the source — mitigated by an explicit "always verify the live deployed code via download-and-grep, never trust `LastModified` alone" practice, now standing discipline for this project.
+- Negative/operational risk (materialized): the staging discipline required to keep `package/` (the actual zip source) in sync with the edited source file is manual and has caused at least one deploy where the staged code was stale relative to the source — mitigated by an explicit "always verify the live deployed code via download-and-grep, never trust `LastModified` alone" practice, now standing discipline for this project.
 
 ---
 
@@ -105,9 +105,9 @@ This defect was masked for Apple (whose "Total net sales" figure is redundantly 
 
 ## ADR-007: API Gateway key enforcement on the query endpoint
 
-**Status:** Accepted (verified this session's predecessor sessions; not reopened)
+**Status:** Accepted (verified live)
 
-**Context:** The query endpoint (`pfjtvbl6ck/prod`) is publicly routable and needed some form of access control appropriate to a POC (not requiring full Cognito/OAuth investment, but also not left fully open).
+**Context:** The query endpoint (`<API_ID>/prod`) is publicly routable and needed some form of access control appropriate to a POC (not requiring full Cognito/OAuth investment, but also not left fully open).
 
 **Decision:** Enable API Gateway's built-in `apiKeyRequired=true` enforcement on the query resource, with the actual key value held in SSM Parameter Store rather than committed to source or `.env` files directly.
 
@@ -129,7 +129,7 @@ This defect was masked for Apple (whose "Total net sales" figure is redundantly 
 **Consequences:**
 - Positive: keeps the RAG layer's filtering logic simple and predictable for the POC's demonstrated scenarios.
 - Negative/known gap: if a single natural-language question mentions multiple companies, only one company's filter is applied at the RAG layer on the first retrieval pass — this is explicitly disclosed as a known limitation in demo framing rather than hidden, consistent with the project's "known gaps as evidence of deep understanding" demo strategy.
-- The `post_filter` widening (ticker OR raw company name) was bundled into the same commit as an unrelated `top_n` change and was not independently unit-tested in isolation before being relied upon — it has since been exercised successfully in this session's live tests (correct company-scoped results for all three companies), but is flagged for a dedicated verification pass for commit-hygiene reasons, not because of an observed failure.
+- The `post_filter` widening (ticker OR raw company name) was bundled into the same commit as an unrelated `top_n` change and was not independently unit-tested in isolation before being relied upon — it has since been exercised successfully in live tests (correct company-scoped results for all three companies), but is flagged for a dedicated verification pass for commit-hygiene reasons, not because of an observed failure.
 
 ---
 
@@ -148,4 +148,4 @@ This defect was masked for Apple (whose "Total net sales" figure is redundantly 
 
 ---
 
-*Generated from project memory as of September 12, 2026. Reflects decisions and fixes confirmed through live verification in prior and current sessions on `rag-pipeline-financial`.*
+*As of September 12, 2026. Reflects decisions and fixes confirmed through live verification.*

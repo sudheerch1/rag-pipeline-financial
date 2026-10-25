@@ -1,7 +1,7 @@
 {
   "backend_roles": [
-    "arn:aws:iam::911414006786:role/service-role/rag-document-processor-role-ucg8h778",
-    "arn:aws:iam::911414006786:role/rag-financial-lambda-role"
+    "arn:aws:iam::<ACCOUNT_ID>:role/service-role/rag-document-processor-role-ucg8h778",
+    "arn:aws:iam::<ACCOUNT_ID>:role/rag-financial-lambda-role"
   ],
   "users": ["ragadmin"]
 }

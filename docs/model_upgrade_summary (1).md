@@ -24,7 +24,7 @@ EMBED_DIMENSIONS = 1536    # Cohere v4 defaults to 1536, matches existing OpenSe
 
 **Important:** Claude Haiku 4.5 requires the `us.` cross-region inference profile prefix. The bare model ID `anthropic.claude-haiku-4-5-20251001-v1:0` throws `ValidationException`.
 
-Both models verified via `verify_bedrock_models.py` against account `911414006786`, region `us-east-1`, profile `rag-dev`.
+Both models verified via `verify_bedrock_models.py` against account `<ACCOUNT_ID>`, region `us-east-1`, profile `rag-dev`.
 
 ---
 
@@ -67,7 +67,7 @@ Both models verified via `verify_bedrock_models.py` against account `91141400678
 - [ ] Update `query_graph.py` — HyDE embed call
 - [ ] Run `create_index.py` (dimension unchanged)
 - [ ] Run `setup_hybrid_search.py`
-- [ ] Map IAM backend role in OpenSearch Dashboards (`arn:aws:iam::911414006786:role/service-role/rag-document-processor-role-ucg8h778`)
+- [ ] Map IAM backend role in OpenSearch Dashboards (`arn:aws:iam::<ACCOUNT_ID>:role/service-role/rag-document-processor-role-ucg8h778`)
 - [ ] Deploy both Lambdas (ingestion + query)
 - [ ] Re-ingest Johnson + Raceway Ford PDFs (137 chunks total)
 - [ ] Run test query — verify LangSmith traces show Cohere + Haiku

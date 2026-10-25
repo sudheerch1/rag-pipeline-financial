@@ -1,5 +1,5 @@
 {
   "VisibilityTimeout": "300",
   "MessageRetentionPeriod": "345600",
-  "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:911414006786:rag-ingestion-financial-dlq\",\"maxReceiveCount\":3}"
+  "RedrivePolicy": "{\"deadLetterTargetArn\":\"arn:aws:sqs:us-east-1:<ACCOUNT_ID>:rag-ingestion-financial-dlq\",\"maxReceiveCount\":3}"
 }
